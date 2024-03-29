@@ -42,7 +42,7 @@ function addRoom() {
     };
     rooms.push(newRoom);
     if (!searchGuestInput.isConnected) {
-        app.insertBefore(searchGuestInput, roomsContainer);
+        app.insertBefore(searchGuestInput, addRoomButton);
     }
     saveRooms();
     renderRoom(newRoom);
