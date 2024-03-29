@@ -185,7 +185,10 @@ searchGuestInput.addEventListener('input', e => {
         rooms.forEach(renderRoom);
         return;
     }
-    rooms.forEach(room => {
+    clearElementContent(roomsContainer);
+    const filtered = rooms.filter(room => room.guests.some(guest => guest.includes(value)));
+    filtered.forEach(renderRoom);
+    filtered.forEach(room => {
         const guestsList = document.getElementById(getRoomElementId(room.id))?.querySelector('.guests-list');
         if (!guestsList) throw new Error('Could not find guests list');
         guestsList.querySelectorAll('li span[data-guest]').forEach(guestTextElement => {
