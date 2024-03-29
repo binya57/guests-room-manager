@@ -1,10 +1,22 @@
 :root {
-    --primary-color-rgb: 98, 0, 238;
+    /* --primary-color-rgb: 98, 0, 238;
     --primary-color: rgba(var(--primary-color-rgb), 1);
-    --primary-color-light: rgba(var(--primary-color-rgb), .95);
+    --primary-color-light: rgba(var(--primary-color-rgb), .95); */
     --padding: .5rem;
     --gap: 1rem;
     --border-radius: 4px;
+    /* tailwind: */
+    --color100: #ECFDF5;
+    --color200: #D1FAE5;
+    --color300: #A7F3D0;
+    --color400: #6EE7B7;
+    --color500: #34D399;
+    --color600: #10B981;
+    --color700: #059669;
+    --color800: #047857;
+    --color900: #065F46;
+    --color1000: #064E3B;
+
 }
 
 .material-symbols-outlined {
@@ -40,7 +52,7 @@ body {
     padding: calc(var(--padding) * 2);
     gap: var(--gap);
     overflow: auto;
-    background: rgb(245, 246, 253);
+    background: var(--color100);
 }
 
 input {
@@ -60,9 +72,9 @@ input {
 }
 
 input:focus {
-    border-color: var(--primary-color);
+    border-color: var(--color900);
     outline: none;
-    box-shadow: var(--primary-color-light) 0px 0px 4px 1px;
+    box-shadow: var(--color800) 0px 0px 4px 1px;
 }
 
 input[type='search'] {}
@@ -75,11 +87,10 @@ button {
     outline: none;
     cursor: pointer;
     font-weight: 500;
-    border-radius: 3px;
     padding: 0 calc(var(--padding) * 2);
     border-radius: var(--border-radius);
     color: #fff;
-    background: var(--primary-color);
+    background: var(--color900);
     line-height: 1.15;
     /* font-size: 14px; */
     height: 2.25rem;
@@ -96,7 +107,7 @@ button {
 }
 
 button:hover {
-    background: var(--primary-color-light);
+    background: var(--color800);
     box-shadow: 0px 2px 4px -1px rgb(0 0 0 / 20%), 0px 4px 5px 0px rgb(0 0 0 / 14%), 0px 1px 10px 0px rgb(0 0 0 / 12%);
 }
 
