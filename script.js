@@ -66,18 +66,8 @@ function renderRoom(room) {
             };
             roomTitleEl.append(inputEl, acceptNameButton);
         }
-        const deleteButton = document.createElement('button');
-        deleteButton.innerText = 'מחק חדר';
-        deleteButton.onclick = e => {
-            roomEl.remove();
-            rooms.splice(rooms.indexOf(room), 1);
-            if (!rooms.length) {
-                searchGuestInput.remove();
-            }
-            saveRooms();
-        }
         roomNameEl.innerText = room.name;
-        roomTitleEl.append(roomNameEl, editButton, deleteButton)
+        roomTitleEl.append(roomNameEl, editButton)
     } else {
         const inputEl = document.createElement('input');
         inputEl.placeholder = 'שם החדר';
@@ -92,6 +82,17 @@ function renderRoom(room) {
         };
         roomTitleEl.append(inputEl, acceptNameButton);
     }
+    const deleteButton = document.createElement('button');
+    deleteButton.innerText = 'מחק חדר';
+    deleteButton.onclick = e => {
+        roomEl.remove();
+        rooms.splice(rooms.indexOf(room), 1);
+        if (!rooms.length) {
+            searchGuestInput.remove();
+        }
+        saveRooms();
+    }
+    roomTitleEl.appendChild(deleteButton)
 
     const guestListEl = document.createElement('ul');
     guestListEl.className = 'guests-list';
