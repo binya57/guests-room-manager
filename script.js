@@ -1,4 +1,5 @@
 //@ts-check
+const MATERIAL_ICONS_CLASS = "material-symbols-outlined";
 const app = /**@type {HTMLDivElement}*/ (document.getElementById('app'));
 const roomsContainer = document.createElement('div');
 roomsContainer.className = 'rooms-container'
@@ -6,6 +7,21 @@ const addRoomButton = document.createElement('button');
 const searchGuestInput = document.createElement('input');
 searchGuestInput.placeholder = 'חפש אורח';
 searchGuestInput.type = 'search';
+
+
+
+/**
+ * 
+ * @param {string} name 
+ */
+function icon(name) {
+    const icon = document.createElement('i');
+    icon.className = MATERIAL_ICONS_CLASS
+    icon.innerText = name;
+    return icon;
+}
+
+
 /**
  * @typedef Room
  * @property {string} name
@@ -49,14 +65,14 @@ function renderRoom(room) {
     if (room.name) {
         const roomNameEl = document.createElement('span');
         const editButton = document.createElement('button');
-        editButton.innerText = 'ערוך';
+        editButton.appendChild(icon('edit'))
         editButton.onclick = e => {
             clearElementContent(roomTitleEl);
             const inputEl = document.createElement('input');
             inputEl.value = room.name;
             inputEl.placeholder = 'שם החדר';
             const acceptNameButton = document.createElement('button');
-            acceptNameButton.innerText = 'V'
+            acceptNameButton.appendChild(icon('done'))
             acceptNameButton.onclick = e => {
                 room.name = inputEl.value;
                 clearElementContent(roomTitleEl);
@@ -72,7 +88,7 @@ function renderRoom(room) {
         const inputEl = document.createElement('input');
         inputEl.placeholder = 'שם החדר';
         const acceptNameButton = document.createElement('button');
-        acceptNameButton.innerText = 'V'
+        acceptNameButton.appendChild(icon('done'))
         acceptNameButton.onclick = e => {
             room.name = inputEl.value;
             clearElementContent(roomTitleEl)
@@ -83,7 +99,8 @@ function renderRoom(room) {
         roomTitleEl.append(inputEl, acceptNameButton);
     }
     const deleteButton = document.createElement('button');
-    deleteButton.innerText = 'מחק חדר';
+    deleteButton.appendChild(icon('delete'))
+    deleteButton.title = 'מחק חדר'
     deleteButton.onclick = e => {
         roomEl.remove();
         rooms.splice(rooms.indexOf(room), 1);
@@ -123,6 +140,7 @@ function renderRoom(room) {
         saveRooms();
     }
     addGuestButton.innerText = 'הוסף אורח';
+    addGuestButton.appendChild(icon('add'));
     roomGuestsEl.append(guestListEl, guestNameInput, addGuestButton);
 
     roomEl.append(roomTitleEl, roomGuestsEl);
@@ -158,7 +176,8 @@ function loadRooms() {
     return JSON.parse(saved);
 }
 
-addRoomButton.innerText = 'הוסף חדר'
+addRoomButton.innerText = 'הוסף חדר';
+addRoomButton.append(icon('add'));
 addRoomButton.onclick = e => addRoom();
 searchGuestInput.addEventListener('input', e => {
     const { value } = /**@type {HTMLInputElement}*/(e.target);
