@@ -75,8 +75,6 @@ function renderRoom(room) {
             acceptNameButton.appendChild(icon('done'))
             acceptNameButton.onclick = e => {
                 room.name = inputEl.value;
-                clearElementContent(roomTitleEl);
-                roomTitleEl.innerText = inputEl.value;
                 saveRooms();
                 renderRoom(room);
             };
@@ -91,8 +89,6 @@ function renderRoom(room) {
         acceptNameButton.appendChild(icon('done'))
         acceptNameButton.onclick = e => {
             room.name = inputEl.value;
-            clearElementContent(roomTitleEl)
-            roomTitleEl.innerText = inputEl.value;
             saveRooms();
             renderRoom(room);
         };
