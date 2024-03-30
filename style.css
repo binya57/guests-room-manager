@@ -17,7 +17,23 @@
     --color800: #047857;
     --color900: #065F46;
     --color1000: #064E3B;
+}
 
+@media screen and (min-width: 768px) {
+    :root {
+        font-size: 16px;
+    }
+}
+
+html,
+body {
+    margin: 0;
+    padding: 0;
+    width: 100vw;
+    height: 100vh;
+    direction: rtl;
+    overflow: hidden;
+    color: var(--color1000);
 }
 
 .material-symbols-outlined {
@@ -30,22 +46,6 @@
 
 .icon.material-symbols-outlined {
     font-size: 1.5rem;
-}
-
-html,
-body {
-    margin: 0;
-    padding: 0;
-    width: 100vw;
-    height: 100vh;
-    direction: rtl;
-    overflow: hidden;
-}
-
-@media screen and (min-width: 768px) {
-    :root {
-        font-size: 16px;
-    }
 }
 
 * {
@@ -66,10 +66,9 @@ body {
 
 input {
     padding: var(--padding);
-    /* padding: 5px 12px; */
     font-size: 1rem;
     line-height: 20px;
-    color: #24292e;
+    color: var(--color1000);
     vertical-align: middle;
     background-color: #ffffff;
     background-repeat: no-repeat;
@@ -87,6 +86,10 @@ input:focus {
 }
 
 input[type='search'] {}
+
+input::placeholder {
+    color: var(--color900);
+}
 
 button {
     display: inline-flex;
@@ -140,9 +143,22 @@ button:hover {
 
 .room .title {
     display: flex;
+    flex-wrap: wrap;
     gap: var(--gap);
     align-self: center;
     align-items: center;
+    justify-content: center;
+}
+
+.room .title input,
+.room .title span {
+    flex-basis: 100%;
+}
+
+.room .title span {
+    font-size: 1.75rem;
+    text-align: center;
+    font-weight: 600;
 }
 
 .room .title button {}
