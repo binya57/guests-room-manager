@@ -16,7 +16,7 @@ searchGuestInput.type = 'search';
  */
 function icon(name) {
     const icon = document.createElement('i');
-    icon.className = MATERIAL_ICONS_CLASS
+    icon.classList.add(MATERIAL_ICONS_CLASS, 'icon')
     icon.innerText = name;
     return icon;
 }
