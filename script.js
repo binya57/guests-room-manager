@@ -27,6 +27,7 @@ function icon(name) {
  * @property {string} name
  * @property {number} id
  * @property {Array<string>} guests
+ * @property {boolean} isEditing
  */
 
 const rooms = loadRooms();
@@ -38,7 +39,8 @@ function addRoom() {
     const newRoom = {
         name: '',
         id: (rooms[rooms.length - 1]?.id + 1) || 1,
-        guests: []
+        guests: [],
+        isEditing: false
     };
     rooms.push(newRoom);
     if (!searchGuestInput.isConnected) {
@@ -62,37 +64,31 @@ function renderRoom(room) {
     roomTitleEl.className = 'title';
     roomGuestsEl.className = 'guests'
 
-    if (room.name) {
-        const roomNameEl = document.createElement('span');
-        const editButton = document.createElement('button');
-        editButton.appendChild(icon('edit'))
-        editButton.onclick = e => {
-            clearElementContent(roomTitleEl);
-            const inputEl = document.createElement('input');
-            inputEl.value = room.name;
-            inputEl.placeholder = 'שם החדר';
-            const acceptNameButton = document.createElement('button');
-            acceptNameButton.appendChild(icon('done'))
-            acceptNameButton.onclick = e => {
-                room.name = inputEl.value;
-                saveRooms();
-                renderRoom(room);
-            };
-            roomTitleEl.append(inputEl, acceptNameButton);
-        }
-        roomNameEl.innerText = room.name;
-        roomTitleEl.append(roomNameEl, editButton)
-    } else {
+    if (!room.name || room.isEditing) {
         const inputEl = document.createElement('input');
         inputEl.placeholder = 'שם החדר';
+        inputEl.value = room.name || '';
         const acceptNameButton = document.createElement('button');
         acceptNameButton.appendChild(icon('done'))
         acceptNameButton.onclick = e => {
             room.name = inputEl.value;
+            room.isEditing = false;
             saveRooms();
             renderRoom(room);
         };
         roomTitleEl.append(inputEl, acceptNameButton);
+
+    } else {
+        const roomNameEl = document.createElement('span');
+        const editButton = document.createElement('button');
+        editButton.appendChild(icon('edit'))
+        editButton.onclick = e => {
+            room.isEditing = true;
+            renderRoom(room);
+        }
+        roomNameEl.innerText = room.name;
+        roomTitleEl.append(roomNameEl, editButton)
+
     }
     const deleteButton = document.createElement('button');
     deleteButton.appendChild(icon('delete'))
@@ -123,16 +119,7 @@ function renderRoom(room) {
     addGuestButton.onclick = e => {
         if (!guestNameInput.value) return;
         room.guests.push(guestNameInput.value);
-        guestNameInput.value = '';
-        clearElementContent(guestListEl);
-        guestListEl.append(...room.guests.map(guest => {
-            const li = document.createElement('li');
-            const text = document.createElement('span');
-            text.dataset.guest = guest;
-            text.innerText = guest;
-            li.append(text);
-            return li;
-        }))
+        renderRoom(room);
         saveRooms();
     }
     addGuestButton.innerText = 'הוסף אורח';
