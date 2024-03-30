@@ -175,7 +175,7 @@ searchGuestInput.addEventListener('input', e => {
         const guestsList = document.getElementById(getRoomElementId(room.id))?.querySelector('.guests-list');
         if (!guestsList) throw new Error('Could not find guests list');
         guestsList.querySelectorAll('li span[data-guest]').forEach(guestTextElement => {
-            if (!(guestTextElement instanceof HTMLElement)) throw new Error();
+            if (!(guestTextElement instanceof HTMLElement)) throw new Error('A guest element is not HtmlElement');
             const guestName = guestTextElement.dataset.guest ?? '';
             if (!guestName.includes(value)) {
                 clearElementContent(guestTextElement);
@@ -189,18 +189,27 @@ searchGuestInput.addEventListener('input', e => {
                 guestTextElement.appendChild(strong);
                 return;
             }
-            const split = guestName.split(value).map(s => {
-                if (!s) { // is a match
-                    const strong = document.createElement('strong');
-                    strong.innerText = value;
-                    return strong;
-                }
-                const span = document.createElement('span');
-                span.innerText = s;
-                return span;
-            });
+            const matches = [...guestName.matchAll(new RegExp(value, 'g'))];
             clearElementContent(guestTextElement);
-            guestTextElement.append(...split);
+
+            matches.forEach((match, index) => {
+                const [matchValue] = match;
+                const { index: matchIndex, length: matchLength } = match;
+                const prevMatchEndIndex = index > 0
+                    ? (matches[index - 1].index || 0) + matches[index - 1][0].length
+                    : 0;
+                const prev = guestName.slice(prevMatchEndIndex, matchIndex);
+                const normal = document.createTextNode(prev);
+                const strong = document.createElement('strong');
+                strong.innerText = matchValue;
+                guestTextElement.append(normal, strong);
+            })
+            const lastMatch = matches[matches.length - 1];
+            if (lastMatch.index || 0 + lastMatch[0].length < guestName.length) {
+                const normal = document.createTextNode(guestName.slice((lastMatch.index || 0) + lastMatch[0].length));
+                guestTextElement.append(normal);
+            }
+
         })
     })
 })
