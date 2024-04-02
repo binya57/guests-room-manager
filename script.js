@@ -1,5 +1,4 @@
 //@ts-check
-const MATERIAL_ICONS_CLASS = "material-symbols-outlined";
 const app = /**@type {HTMLDivElement}*/ (document.getElementById('app'));
 const roomsContainer = document.createElement('div');
 roomsContainer.className = 'rooms-container'
@@ -8,16 +7,38 @@ const searchGuestInput = document.createElement('input');
 searchGuestInput.placeholder = 'חפש אורח';
 searchGuestInput.type = 'search';
 
+const iconsFileNamesMap = {
+    add: 'add_FILL0_wght400_GRAD0_opsz24.svg',
+    delete: 'delete_FILL0_wght400_GRAD0_opsz24.svg',
+    edit: 'edit_FILL0_wght400_GRAD0_opsz24.svg',
+    done: 'done_FILL0_wght400_GRAD0_opsz24.svg'
+}
+
+const iconCache = new Map();
 
 
 /**
  * 
- * @param {string} name 
+ * @param {keyof typeof iconsFileNamesMap} name 
  */
 function icon(name) {
     const icon = document.createElement('i');
-    icon.classList.add(MATERIAL_ICONS_CLASS, 'icon')
-    icon.innerText = name;
+    icon.className = 'icon';
+    if (!iconCache.has(name)) {
+        const fileName = iconsFileNamesMap[name];
+        fetch('/assets/icons/' + fileName).then(res => {
+            if (!res.ok) {
+                icon.innerText = name;
+                return;
+            }
+            res.text().then(html => {
+                icon.innerHTML = html
+                iconCache.set(name, html);
+            });
+        })
+    } else {
+        icon.innerHTML = iconCache.get(name);
+    }
     return icon;
 }
 
