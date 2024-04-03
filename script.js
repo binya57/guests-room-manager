@@ -10,11 +10,14 @@ const searchGuestInput = document.createElement('input');
 searchGuestInput.placeholder = 'חפש אורח';
 searchGuestInput.type = 'search';
 
+
 const iconsFileNamesMap = {
     add: 'add_FILL0_wght400_GRAD0_opsz24.svg',
     delete: 'delete_FILL0_wght400_GRAD0_opsz24.svg',
     edit: 'edit_FILL0_wght400_GRAD0_opsz24.svg',
-    done: 'done_FILL0_wght400_GRAD0_opsz24.svg'
+    done: 'done_FILL0_wght400_GRAD0_opsz24.svg',
+    lock: 'lock_FILL0_wght400_GRAD0_opsz24.svg',
+    unlock: 'lock_open_FILL0_wght400_GRAD0_opsz24.svg'
 }
 
 const iconCache = new Map();
@@ -23,7 +26,7 @@ const iconCache = new Map();
 /**
  * 
  * @param {keyof typeof iconsFileNamesMap} name 
- */
+*/
 function icon(name) {
     const icon = document.createElement('i');
     icon.className = 'icon';
@@ -52,43 +55,46 @@ function icon(name) {
  * @property {number} id
  * @property {Array<string>} guests
  * @property {boolean} isEditing
- */
+*/
 
-const rooms = loadRooms();
-if (rooms.length) {
-    rooms.forEach(renderRoom);
+const appState = loadAppState()
+renderRooms();
+
+function renderRooms() {
+    clearElementContent(roomsContainer);
+    appState.rooms.forEach(renderRoom);
 }
 
 function addRoom() {
     const newRoom = {
         name: '',
-        id: (rooms[rooms.length - 1]?.id + 1) || 1,
+        id: (appState.rooms[appState.rooms.length - 1]?.id + 1) || 1,
         guests: [],
         isEditing: false
     };
-    rooms.push(newRoom);
+    appState.rooms.push(newRoom);
     if (!searchGuestInput.isConnected) {
         app.insertBefore(searchGuestInput, addRoomButton);
     }
-    saveRooms();
+    saveState();
     renderRoom(newRoom);
 }
 
 /**
  * 
  * @param {Room} room 
- */
+*/
 function renderRoom(room) {
     const roomEl = document.createElement('div');
     const roomTitleEl = document.createElement('div');
     const roomGuestsEl = document.createElement('div');
-
+    
     roomEl.id = getRoomElementId(room.id);
     roomEl.className = 'room';
     roomTitleEl.className = 'title';
     roomGuestsEl.className = 'guests'
-
-    if (!room.name || room.isEditing) {
+    
+    if (!room.name || room.isEditing && !appState.isLocked) {
         const inputEl = document.createElement('input');
         inputEl.placeholder = 'שם החדר';
         inputEl.value = room.name || '';
@@ -97,11 +103,11 @@ function renderRoom(room) {
         acceptNameButton.onclick = e => {
             room.name = inputEl.value;
             room.isEditing = false;
-            saveRooms();
+            saveState();
             renderRoom(room);
         };
         roomTitleEl.append(inputEl, acceptNameButton);
-
+        
     } else {
         const roomNameEl = document.createElement('span');
         const editButton = document.createElement('button');
@@ -111,22 +117,24 @@ function renderRoom(room) {
             renderRoom(room);
         }
         roomNameEl.innerText = room.name;
-        roomTitleEl.append(roomNameEl, editButton)
-
+        roomTitleEl.append(roomNameEl, appState.isLocked ? '' : editButton)
+        
     }
     const deleteButton = document.createElement('button');
     deleteButton.appendChild(icon('delete'))
     deleteButton.title = 'מחק חדר'
     deleteButton.onclick = e => {
         roomEl.remove();
-        rooms.splice(rooms.indexOf(room), 1);
-        if (!rooms.length) {
+        appState.rooms.splice(appState.rooms.indexOf(room), 1);
+        if (!appState.rooms.length) {
             searchGuestInput.remove();
         }
-        saveRooms();
+        saveState();
     }
-    roomTitleEl.appendChild(deleteButton)
-
+    if (!appState.isLocked) {
+        roomTitleEl.appendChild(deleteButton)
+    }
+    
     const guestListEl = document.createElement('ul');
     guestListEl.className = 'guests-list';
     guestListEl.append(...room.guests.map(guest => {
@@ -144,16 +152,20 @@ function renderRoom(room) {
         if (!guestNameInput.value) return;
         room.guests.push(guestNameInput.value);
         renderRoom(room);
-        saveRooms();
+        saveState();
     }
     addGuestButton.innerText = 'הוסף אורח';
     addGuestButton.appendChild(icon('add'));
-    roomGuestsEl.append(guestListEl, guestNameInput, addGuestButton);
-
+    if (!appState.isLocked) {
+        roomGuestsEl.append(guestListEl, guestNameInput, addGuestButton);
+    } else {
+        roomGuestsEl.append(guestListEl);
+    }
+    
     roomEl.append(roomTitleEl, roomGuestsEl);
 
     const existingRoom = document.getElementById(getRoomElementId(room.id));
-
+    
     if (existingRoom) {
         existingRoom.replaceWith(roomEl);
         return;
@@ -164,22 +176,25 @@ function renderRoom(room) {
 /**
  * 
  * @param {number} roomId 
- */
+*/
 function getRoomElementId(roomId) {
     return 'room-' + roomId;
 }
 
-function saveRooms() {
-    localStorage.setItem('rooms', JSON.stringify(rooms));
+function saveState() {
+    localStorage.setItem('appState', JSON.stringify(appState));
 }
 
 /**
  * 
- * @returns {Array<Room>}
- */
-function loadRooms() {
-    const saved = localStorage.getItem('rooms');
-    if (!saved) return [];
+ * @returns {{rooms: Room[], isLocked: boolean}}
+*/
+function loadAppState() {
+    const saved = localStorage.getItem('appState');
+    if (!saved) return {
+        rooms: [],
+        isLocked: false
+    };
     return JSON.parse(saved);
 }
 
@@ -189,11 +204,11 @@ addRoomButton.onclick = e => addRoom();
 searchGuestInput.addEventListener('input', e => {
     const { value } = /**@type {HTMLInputElement}*/(e.target);
     if (!value) {
-        rooms.forEach(renderRoom);
+        appState.rooms.forEach(renderRoom);
         return;
     }
     clearElementContent(roomsContainer);
-    const filtered = rooms.filter(room => room.guests.some(guest => guest.includes(value)));
+    const filtered = appState.rooms.filter(room => room.guests.some(guest => guest.includes(value)));
     filtered.forEach(renderRoom);
     filtered.forEach(room => {
         const guestsList = document.getElementById(getRoomElementId(room.id))?.querySelector('.guests-list');
@@ -220,8 +235,8 @@ searchGuestInput.addEventListener('input', e => {
                 const [matchValue] = match;
                 const { index: matchIndex, length: matchLength } = match;
                 const prevMatchEndIndex = index > 0
-                    ? (matches[index - 1].index || 0) + matches[index - 1][0].length
-                    : 0;
+                ? (matches[index - 1].index || 0) + matches[index - 1][0].length
+                : 0;
                 const prev = guestName.slice(prevMatchEndIndex, matchIndex);
                 const normal = document.createTextNode(prev);
                 const strong = document.createElement('strong');
@@ -241,12 +256,22 @@ searchGuestInput.addEventListener('input', e => {
 /**
  * 
  * @param {HTMLElement} element 
- */
+*/
 function clearElementContent(element) {
     while (element.lastChild) {
         element.removeChild(element.lastChild);
     }
 }
+const toggleLockStateButton = document.createElement('button');
+toggleLockStateButton.append(icon(appState.isLocked ? 'unlock' : 'lock'))        
+toggleLockStateButton.className = 'lock-button';
+toggleLockStateButton.onclick = e => {
+    clearElementContent(toggleLockStateButton);
+    appState.isLocked = !appState.isLocked;
+    toggleLockStateButton.append(icon(appState.isLocked ? 'unlock' : 'lock'))          
+    saveState();
+    renderRooms();
+}
 
-app.append(rooms.length ? searchGuestInput : '', addRoomButton, roomsContainer)
+app.append(appState.rooms.length ? searchGuestInput : '', addRoomButton, roomsContainer, toggleLockStateButton)
 
