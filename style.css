@@ -175,7 +175,7 @@ button:hover {
 
 .room .guests button {}
 
-.lock-button {
+.fab-menu {
     position: fixed;
     bottom: 7%;
     right: 7%;
@@ -185,10 +185,52 @@ button:hover {
     animation: enter-fab normal ease 300ms;        
 }
 
+.fab-menu-items-container {
+    overflow: hidden;
+    position: absolute;
+    bottom: calc(100% + var(--gap));
+    padding: var(--padding);
+    display: flex;
+    gap: var(--gap);
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+}
+
+.open .fab-menu-items-container {
+    pointer-events: all;
+}
+
+.fab-menu-items-container .fab-menu-item {
+    transition: transform 300ms ease, opacity 200ms linear;
+    transform-origin: bottom center;
+    transform: scale(0);
+    opacity: 0;
+}
+
+.open .fab-menu-items-container .fab-menu-item {
+    transform: scale(1);
+    opacity: 1;
+}
+
+
+
 @keyframes enter-fab {
     from {
         transform: scale(0);
     } to {
         transform: scale(1)
     }
+}
+
+.dragging {
+    position: relative;
+}
+
+.dragging::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-color: rgba(0, 0, 0, 0.25);
 }

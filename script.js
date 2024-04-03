@@ -1,5 +1,5 @@
 //@ts-check
-const BASE_URL = location.href.startsWith('https') 
+const BASE_URL = location.href.startsWith('https')
     ? location.origin + location.pathname.slice(0, location.pathname.slice(1).indexOf('/') + 1) + '/'
     : '/';
 const app = /**@type {HTMLDivElement}*/ (document.getElementById('app'));
@@ -17,7 +17,10 @@ const iconsFileNamesMap = {
     edit: 'edit_FILL0_wght400_GRAD0_opsz24.svg',
     done: 'done_FILL0_wght400_GRAD0_opsz24.svg',
     lock: 'lock_FILL0_wght400_GRAD0_opsz24.svg',
-    unlock: 'lock_open_FILL0_wght400_GRAD0_opsz24.svg'
+    unlock: 'lock_open_FILL0_wght400_GRAD0_opsz24.svg',
+    menu: 'menu_FILL0_wght400_GRAD0_opsz24.svg',
+    download: "download_FILL0_wght400_GRAD0_opsz24.svg",
+    upload: "upload_file_FILL0_wght400_GRAD0_opsz24.svg"
 }
 
 const iconCache = new Map();
@@ -56,7 +59,6 @@ function icon(name) {
  * @property {Array<string>} guests
  * @property {boolean} isEditing
 */
-
 const appState = loadAppState()
 renderRooms();
 
@@ -88,12 +90,12 @@ function renderRoom(room) {
     const roomEl = document.createElement('div');
     const roomTitleEl = document.createElement('div');
     const roomGuestsEl = document.createElement('div');
-    
+
     roomEl.id = getRoomElementId(room.id);
     roomEl.className = 'room';
     roomTitleEl.className = 'title';
     roomGuestsEl.className = 'guests'
-    
+
     if (!room.name || room.isEditing && !appState.isLocked) {
         const inputEl = document.createElement('input');
         inputEl.placeholder = 'שם החדר';
@@ -107,7 +109,7 @@ function renderRoom(room) {
             renderRoom(room);
         };
         roomTitleEl.append(inputEl, acceptNameButton);
-        
+
     } else {
         const roomNameEl = document.createElement('span');
         const editButton = document.createElement('button');
@@ -118,7 +120,7 @@ function renderRoom(room) {
         }
         roomNameEl.innerText = room.name;
         roomTitleEl.append(roomNameEl, appState.isLocked ? '' : editButton)
-        
+
     }
     const deleteButton = document.createElement('button');
     deleteButton.appendChild(icon('delete'))
@@ -134,7 +136,7 @@ function renderRoom(room) {
     if (!appState.isLocked) {
         roomTitleEl.appendChild(deleteButton)
     }
-    
+
     const guestListEl = document.createElement('ul');
     guestListEl.className = 'guests-list';
     guestListEl.append(...room.guests.map(guest => {
@@ -161,11 +163,11 @@ function renderRoom(room) {
     } else {
         roomGuestsEl.append(guestListEl);
     }
-    
+
     roomEl.append(roomTitleEl, roomGuestsEl);
 
     const existingRoom = document.getElementById(getRoomElementId(room.id));
-    
+
     if (existingRoom) {
         existingRoom.replaceWith(roomEl);
         return;
@@ -235,8 +237,8 @@ searchGuestInput.addEventListener('input', e => {
                 const [matchValue] = match;
                 const { index: matchIndex, length: matchLength } = match;
                 const prevMatchEndIndex = index > 0
-                ? (matches[index - 1].index || 0) + matches[index - 1][0].length
-                : 0;
+                    ? (matches[index - 1].index || 0) + matches[index - 1][0].length
+                    : 0;
                 const prev = guestName.slice(prevMatchEndIndex, matchIndex);
                 const normal = document.createTextNode(prev);
                 const strong = document.createElement('strong');
@@ -255,23 +257,137 @@ searchGuestInput.addEventListener('input', e => {
 
 /**
  * 
- * @param {HTMLElement} element 
+ * @param {Node} element 
 */
 function clearElementContent(element) {
     while (element.lastChild) {
         element.removeChild(element.lastChild);
     }
 }
-const toggleLockStateButton = document.createElement('button');
-toggleLockStateButton.append(icon(appState.isLocked ? 'unlock' : 'lock'))        
-toggleLockStateButton.className = 'lock-button';
-toggleLockStateButton.onclick = e => {
-    clearElementContent(toggleLockStateButton);
-    appState.isLocked = !appState.isLocked;
-    toggleLockStateButton.append(icon(appState.isLocked ? 'unlock' : 'lock'))          
-    saveState();
-    renderRooms();
+
+function exportData() {
+    const data = appState;
+    const json = JSON.stringify(data);
+    const buffer = new Blob([...json], { type: 'text/plain' });
+    const dataURl = URL.createObjectURL(buffer)
+    const link = document.createElement('a');
+    link.href = dataURl;
+    link.download = "room-management" + new Date().toLocaleDateString() + '.txt';
+    link.click();
+    URL.revokeObjectURL(dataURl);
+
 }
 
-app.append(appState.rooms.length ? searchGuestInput : '', addRoomButton, roomsContainer, toggleLockStateButton)
+/**
+ * 
+ * @param {File} file 
+ * @returns {Promise<Partial<typeof appState>>}
+ */
+async function loadDataFromFile(file) {
+    const data = await file.text();
+    return JSON.parse(data);
+}
+
+
+
+
+
+
+
+document.body.addEventListener('dragenter', e => {
+    e.stopPropagation();
+    e.preventDefault();
+    document.body.classList.add('dragging')
+})
+
+document.body.addEventListener('dragleave', e => {
+    e.stopPropagation();
+    e.preventDefault();
+    if (e.target !== document.body) return;
+    document.body.classList.remove('dragging')
+})
+
+document.body.addEventListener('drop', e => {
+    document.body.classList.remove('dragging');
+    const file = e.dataTransfer?.files[0];
+    if (!file) return;
+    loadDataFromFile(file).then(res => {
+        const props = Object.keys(res);
+        props.forEach(key => {
+            appState[key] = res[key] ?? appState[key];
+        })
+        renderRooms();
+    })
+})
+
+function createFloatingMenu() {
+    /**@type {Array<{className: string, onclick: (event: MouseEvent) => void, icon: keyof typeof iconsFileNamesMap}>} */
+    const menuItems = [
+        {
+            className: '',
+            icon: appState.isLocked ? 'unlock' : 'lock',
+            onclick: e => {
+                const currentButton = /**@type {HTMLButtonElement}*/(e.currentTarget);
+                clearElementContent(currentButton);
+                appState.isLocked = !appState.isLocked;
+                currentButton.append(icon(appState.isLocked ? 'unlock' : 'lock'))
+                saveState();
+                renderRooms();
+            }
+        },
+        {
+            className: '',
+            icon: 'download',
+            onclick: e => {
+                exportData();
+            }
+        },
+        {
+            className: '',
+            icon: 'upload',
+            onclick: e => {
+                const input = document.createElement('input');
+                input.type = 'file';
+                input.click();
+                const [file] = input.files || [];
+                if (!file) return;
+                loadDataFromFile(file).then(res => {
+                    const props = Object.keys(res);
+                    props.forEach(key => {
+                        appState[key] = res[key] ?? appState[key];
+                    })
+                    renderRooms();
+                })
+            }
+        }
+    ];
+
+    const floatingMenu = document.createElement('button');
+    floatingMenu.className = 'fab-menu';
+    floatingMenu.append(icon('menu'));
+    floatingMenu.onclick = e => {
+        if (!(floatingMenu === e.currentTarget)) return;
+        floatingMenu.classList.toggle('open');
+    }
+
+    const menuItemsContainer = document.createElement('div');
+    menuItemsContainer.className = 'fab-menu-items-container';
+    menuItemsContainer.append(...menuItems.map((item, index) => {
+        const itemButton = document.createElement('button');
+        itemButton.onclick = item.onclick;
+        itemButton.classList.add('fab-menu-item');
+        const totalDelay = 20 * menuItems.length;
+        itemButton.style.transitionDelay = (totalDelay - ((index) * 20)) + 'ms'
+        if (item.className) {
+            itemButton.classList.add(item.className);
+        }
+        itemButton.append(icon(item.icon));
+        return itemButton;
+    }))
+    floatingMenu.append(menuItemsContainer);
+
+    return floatingMenu;
+}
+
+app.append(appState.rooms.length ? searchGuestInput : '', addRoomButton, roomsContainer, createFloatingMenu())
 
