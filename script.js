@@ -1,4 +1,7 @@
 //@ts-check
+const BASE_URL = location.href.startsWith('https') 
+    ? location.origin + location.pathname.slice(0, location.pathname.slice(1).indexOf('/') + 1) + '/'
+    : '/';
 const app = /**@type {HTMLDivElement}*/ (document.getElementById('app'));
 const roomsContainer = document.createElement('div');
 roomsContainer.className = 'rooms-container'
@@ -26,7 +29,7 @@ function icon(name) {
     icon.className = 'icon';
     if (!iconCache.has(name)) {
         const fileName = iconsFileNamesMap[name];
-        fetch('/assets/icons/' + fileName).then(res => {
+        fetch(BASE_URL + 'assets/icons/' + fileName).then(res => {
             if (!res.ok) {
                 icon.innerText = name;
                 return;
